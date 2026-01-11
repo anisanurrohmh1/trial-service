@@ -1,10 +1,8 @@
 package com.example.batch.entity;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import com.example.batch.dto.TransactionStatus;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,13 +20,18 @@ public class Transaction {
     private String description;
     private BigDecimal amount;
 
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus status; // PENDING, PAID, FAILED
+
     @PrePersist
     public void prePersist() {
         if (this.id == null) {
             this.id = UUID.randomUUID().toString();
         }
+        if (this.status == null) {
+            this.status = TransactionStatus.PENDING;
+        }
     }
 
-    // getters & setters
 }
 
