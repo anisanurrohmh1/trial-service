@@ -5,11 +5,13 @@ import com.example.batch.entity.Transaction;
 import com.example.batch.processor.TransactionProcessor;
 import com.example.batch.reader.TransactionCsvReader;
 import com.example.batch.writer.TransactionWriter;
+import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,16 +34,23 @@ public class BatchConfig {
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
+                .listener(new ChunkListener() {
+                    @Override
+                    public void afterChunk(ChunkContext context) {
+                        System.out.println("Chunk finished, items processed: " + context.getStepContext().getStepExecution().getWriteCount());
+                    }
+                })
                 .build();
     }
 
     @Bean
-    public Job importTransactionJob(
-            JobRepository jobRepository,
-            Step transactionStep) {
-
+    public Job importTransactionJob(JobRepository jobRepository,
+                                    Step transactionStep,
+                                    JobCompletionNotificationListener listener) {
         return new JobBuilder("importTransactionJob", jobRepository)
+                .listener(listener)
                 .start(transactionStep)
                 .build();
     }
+
 }
